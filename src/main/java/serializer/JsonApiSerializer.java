@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import document.JsonApiDocument;
@@ -56,12 +57,16 @@ public class JsonApiSerializer<T extends JsonApiDocument> extends StdSerializer<
 
         JsonNode dataNode;
         if(data instanceof Collection) { //data is array of resource objects
-            dataNode = mapper.createArrayNode();
-            //add all data entries to docdataNode array
+            //add all serialized elements to the data node
+            ArrayNode arrayNode = mapper.createArrayNode();
+            for(Object resourceObject: (Collection) data) {
+                arrayNode.add(createDataNode(resourceObject));
+            }
+            dataNode = arrayNode;
         }
         else { //data is single resource object
+            //serialize the object
             dataNode = createDataNode(data);
-            //add data to datanode
         }
 
         gen.writeObjectField("data", dataNode);
