@@ -6,11 +6,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import document.JsonApiDocument;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +22,9 @@ public class JsonApiSerializerTest {
 
     @BeforeAll
     static void setUp(){
-        module.addSerializer(new JsonApiSerializer<>(JsonApiDocument.class));
+
+        module.addSerializer(new JsonApiSerializer(SimplePojo.class));
+        module.addSerializer(new JsonApiSerializer(Collection.class));
         mapper.registerModule(module);
     }
 
@@ -42,9 +44,9 @@ public class JsonApiSerializerTest {
 
     @Test
     void testSimplePojoSerialization() {
-        JsonApiDocument doc = JsonApiDocument.fromData(simple);
-        JsonNode result = mapper.valueToTree(doc);
+        JsonNode result = mapper.valueToTree(simple);
 
+        System.out.println(result);
         assertEquals(JsonNodeType.OBJECT, result.getNodeType());
         assertEquals("simple", result.get("data").get("type").textValue());
         assertEquals("id", result.get("data").get("id").textValue());
@@ -55,12 +57,12 @@ public class JsonApiSerializerTest {
 
     @Test
     void testCollectionSerialization() {
+
         List<SimplePojo> pojoList = Arrays.asList(
                 new SimplePojo("1"), new SimplePojo("2"), new SimplePojo("3"));
-        JsonApiDocument doc = JsonApiDocument.fromData(pojoList);
-        JsonNode result = mapper.valueToTree(doc);
-
+        JsonNode result = mapper.valueToTree(pojoList);
         JsonNode data = result.get("data");
+        System.out.println(result);
         assertEquals(JsonNodeType.ARRAY, data.getNodeType());
         assertEquals(3, data.size());
         assertEquals("1", data.get(0).get("id").textValue());
