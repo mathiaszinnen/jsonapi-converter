@@ -1,6 +1,7 @@
 package serializer;
 
 import annotations.JsonApiId;
+import annotations.JsonApiLink;
 import annotations.JsonApiResource;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.*;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
 
 public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
@@ -29,11 +31,12 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
     public void serialize(Object obj, JsonGenerator gen, SerializerProvider provider) throws IOException {
         assertHasValidJsonApiAnnotations(obj);
 
-        System.out.println(obj instanceof Collection);
         gen.writeStartObject();
 
         try{
             serializeData(obj, gen);
+
+            serializeLinks(obj, gen);
 
             serializeErrors(obj, gen);
 
@@ -47,13 +50,45 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
         gen.writeEndObject();
     }
 
+    private void serializeLinks(Object obj, JsonGenerator gen) throws InvocationTargetException, IllegalAccessException, IOException {
+        Class clazz = obj.getClass();
+        ObjectNode linkNode = mapper.createObjectNode();
+        if(containsLinks(clazz)) {
+            //later
+        }
+        if(!getLocation(clazz).equals("")) {
+            if(obj instanceof Collection) {
+                //selflink = location
+                linkNode.put("self", getLocation(clazz));
+            }
+            else {
+                //selflink = location/id
+                linkNode.put("self", getLocation(clazz) + "/" + getJsonApiId(obj));
+            }
+        }
+        if(linkNode.size() > 0) {
+           gen.writeObjectField("links", linkNode);
+        }
+    }
+
+    private String getLocation(Class clazz) {
+        JsonApiResource annotation = (JsonApiResource) clazz.getDeclaredAnnotation(JsonApiResource.class);
+        return annotation.location();
+    }
+
+    private boolean containsLinks(Class clazz) {
+        return Arrays.stream(
+                clazz
+                        .getDeclaredFields())
+                        .anyMatch(field -> field.isAnnotationPresent(JsonApiLink.class));
+    }
+
     private void serializeData(Object obj, JsonGenerator gen) throws IOException, InvocationTargetException, IllegalAccessException {
-        assertIsValidData(obj);
+        assertHasValidData(obj);
 
         JsonNode dataNode;
         if(obj instanceof Collection) { //data is array of resource objects
             //add all serialized elements to the data node
-            System.out.println("yes");
             ArrayNode arrayNode = mapper.createArrayNode();
             for(Object resourceObject: (Collection) obj) {
                 arrayNode.add(createDataNode(resourceObject));
@@ -124,7 +159,7 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
         //later
     }
 
-    private void assertIsValidData(Object data) {
+    private void assertHasValidData(Object data) {
         //later
     }
 

@@ -25,6 +25,7 @@ public class JsonApiSerializerTest {
 
         module.addSerializer(new JsonApiSerializer(SimplePojo.class));
         module.addSerializer(new JsonApiSerializer(Collection.class));
+        module.addSerializer(new JsonApiSerializer(SelfLinkPojo.class));
         mapper.registerModule(module);
     }
 
@@ -57,11 +58,12 @@ public class JsonApiSerializerTest {
 
     @Test
     void testCollectionSerialization() {
-
         List<SimplePojo> pojoList = Arrays.asList(
                 new SimplePojo("1"), new SimplePojo("2"), new SimplePojo("3"));
+
         JsonNode result = mapper.valueToTree(pojoList);
         JsonNode data = result.get("data");
+
         System.out.println(result);
         assertEquals(JsonNodeType.ARRAY, data.getNodeType());
         assertEquals(3, data.size());
@@ -73,4 +75,19 @@ public class JsonApiSerializerTest {
         assertEquals("something", data.get(2).get("attributes").get("anotherAttribute").textValue());
     }
 
+    @JsonApiResource(type = "selflinker", location = "http://www.example.com/repository")
+    private static class SelfLinkPojo {
+        @JsonApiId
+        String id = "id";
+    }
+    private static final SelfLinkPojo selfLinkPojo = new SelfLinkPojo();
+
+    @Test
+    public void testSelfLinkGeneration() {
+        JsonNode result = mapper.valueToTree(selfLinkPojo);
+
+        System.out.println(result);
+        assertEquals(2, result.size());
+        assertEquals("http://www.example.com/repository/id", result.get("links").get("self").textValue());
+    }
 }

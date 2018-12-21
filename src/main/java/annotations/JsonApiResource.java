@@ -17,4 +17,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @JsonSerialize(using = JsonApiSerializer.class)
 public @interface JsonApiResource {
     String type();
+    String location() default "";
 }
