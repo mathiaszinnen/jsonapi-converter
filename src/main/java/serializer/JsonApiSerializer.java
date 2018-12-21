@@ -3,47 +3,43 @@ package serializer;
 import annotations.JsonApiId;
 import annotations.JsonApiResource;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import document.JsonApiDocument;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.Collection;
 
-public class JsonApiSerializer<T extends JsonApiDocument> extends StdSerializer<T> {
+public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
     private static final ObjectMapper mapper = new ObjectMapper();
-
 
     private JsonApiSerializer() {
         this(null);
     }
 
-    protected JsonApiSerializer(Class<T> t) {
+    protected JsonApiSerializer(Class<Object> t) {
         super(t);
     }
 
     @Override
-    public void serialize(JsonApiDocument doc, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        assertIsValidJsonApiDocument(doc);
+    public void serialize(Object obj, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        assertHasValidJsonApiAnnotations(obj);
 
+        System.out.println(obj instanceof Collection);
         gen.writeStartObject();
 
         try{
-            serializeData(doc, gen);
+            serializeData(obj, gen);
 
-            serializeErrors(doc, gen);
+            serializeErrors(obj, gen);
 
-            serializeIncluded(doc, gen);
+            serializeIncluded(obj, gen);
 
-            serializeRelationships(doc, gen);
+            serializeRelationships(obj, gen);
         } catch (Exception e) {
             throw new IOException("Serialization failed", e);
         }
@@ -51,22 +47,22 @@ public class JsonApiSerializer<T extends JsonApiDocument> extends StdSerializer<
         gen.writeEndObject();
     }
 
-    private void serializeData(JsonApiDocument doc, JsonGenerator gen) throws IOException, InvocationTargetException, IllegalAccessException {
-        Object data = doc.getData();
-        assertIsValidData(data);
+    private void serializeData(Object obj, JsonGenerator gen) throws IOException, InvocationTargetException, IllegalAccessException {
+        assertIsValidData(obj);
 
         JsonNode dataNode;
-        if(data instanceof Collection) { //data is array of resource objects
+        if(obj instanceof Collection) { //data is array of resource objects
             //add all serialized elements to the data node
+            System.out.println("yes");
             ArrayNode arrayNode = mapper.createArrayNode();
-            for(Object resourceObject: (Collection) data) {
+            for(Object resourceObject: (Collection) obj) {
                 arrayNode.add(createDataNode(resourceObject));
             }
             dataNode = arrayNode;
         }
         else { //data is single resource object
             //serialize the object
-            dataNode = createDataNode(data);
+            dataNode = createDataNode(obj);
         }
 
         gen.writeObjectField("data", dataNode);
@@ -116,15 +112,15 @@ public class JsonApiSerializer<T extends JsonApiDocument> extends StdSerializer<
                 .type();
     }
 
-    private void serializeErrors(JsonApiDocument doc, JsonGenerator gen) {
+    private void serializeErrors(Object doc, JsonGenerator gen) {
         //later
     }
 
-    private void serializeRelationships(JsonApiDocument doc, JsonGenerator gen) {
+    private void serializeRelationships(Object doc, JsonGenerator gen) {
         //later
     }
 
-    private void serializeIncluded(JsonApiDocument doc, JsonGenerator gen) {
+    private void serializeIncluded(Object doc, JsonGenerator gen) {
         //later
     }
 
@@ -132,7 +128,7 @@ public class JsonApiSerializer<T extends JsonApiDocument> extends StdSerializer<
         //later
     }
 
-    private void assertIsValidJsonApiDocument(JsonApiDocument doc) {
-        //later
+
+    private void assertHasValidJsonApiAnnotations(Object obj) {
     }
 }
