@@ -131,10 +131,6 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
         return node;
     }
 
-    private boolean isSerializable(Field field) {
-        return field.isAccessible() || field.isAnnotationPresent(JsonProperty.class);
-    }
-
     private String getJsonApiId(Object data) throws IllegalAccessException, InvocationTargetException {
         for(Field field: data.getClass().getDeclaredFields()) {
             field.setAccessible(true);
