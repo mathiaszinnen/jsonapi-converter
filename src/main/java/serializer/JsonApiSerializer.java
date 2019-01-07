@@ -17,6 +17,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
 public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -75,7 +76,7 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
 
     private String getLocation(Class clazz) {
         JsonApiResource annotation = (JsonApiResource) clazz.getDeclaredAnnotation(JsonApiResource.class);
-        return annotation.location();
+        return (annotation != null)? annotation.location() : "";
     }
 
     private boolean containsLinks(Class clazz) {
