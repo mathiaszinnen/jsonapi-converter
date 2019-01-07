@@ -3,6 +3,7 @@ package serializer;
 import annotations.JsonApiId;
 import annotations.JsonApiLink;
 import annotations.JsonApiResource;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -114,11 +115,16 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
     private JsonNode getJsonApiAttributes(Object data) throws IllegalAccessException {
         ObjectNode node = mapper.createObjectNode();
         for(Field field: data.getClass().getDeclaredFields()) {
-            if(!field.isAnnotationPresent(JsonApiId.class)) {
+            //consider jsonProperty annotations later?
+            if(isSerializable(field) && !field.isAnnotationPresent(JsonApiId.class)) {
                 node.set(field.getName(), mapper.valueToTree(field.get(data)));
             }
         }
         return node;
+    }
+
+    private boolean isSerializable(Field field) {
+        return field.isAccessible() || field.isAnnotationPresent(JsonProperty.class);
     }
 
     private String getJsonApiId(Object data) throws IllegalAccessException, InvocationTargetException {
