@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -115,8 +116,15 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
     private JsonNode getJsonApiAttributes(Object data) throws IllegalAccessException {
         ObjectNode node = mapper.createObjectNode();
         for(Field field: data.getClass().getDeclaredFields()) {
-            //consider jsonProperty annotations later?
-            if(isSerializable(field) && !field.isAnnotationPresent(JsonApiId.class)) {
+            if(field.isAnnotationPresent(JsonApiId.class) ) {
+                continue; //do not serialize id twice.
+            } else if(field.isAnnotationPresent(JsonProperty.class)) {
+                field.setAccessible(true);
+                String fieldName = field.getAnnotation(JsonProperty.class).value();
+                node.set(fieldName, mapper.valueToTree(field.get(data)));
+            } else if(!Modifier.isPublic(field.getModifiers())) {
+                continue; //do not serialize inaccessible fields without JsonProperty-annotation.
+            } else {
                 node.set(field.getName(), mapper.valueToTree(field.get(data)));
             }
         }
