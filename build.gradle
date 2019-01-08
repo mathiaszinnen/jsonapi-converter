@@ -1,11 +1,11 @@
-group 'org.jvalue'
-version '1.0'
-
-
 plugins {
     id 'java-library'
     id 'maven-publish'
 }
+
+
+group 'org.jvalue'
+version '1.0'
 
 sourceCompatibility = 1.8
 
@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     api group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.7'
+    implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.3.2'
 }
 
