@@ -5,7 +5,9 @@ import annotations.JsonApiLink;
 import annotations.JsonApiResource;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
@@ -18,9 +20,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 
-public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
+public class JsonApiSerializer<T> extends StdSerializer<Object> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private JsonApiSerializer() {
