@@ -1,6 +1,7 @@
 package serializer;
 
 import annotations.JsonApiId;
+import annotations.JsonApiLink;
 import annotations.JsonApiResource;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JsonApiSerializerTest {
 
@@ -126,6 +128,33 @@ public class JsonApiSerializerTest {
         assertEquals("stringVal", dataNode.get("attributes").get("name").textValue());
         assertEquals("stringVal", dataNode.get("attributes").get("stringAttr").textValue());
         assertEquals(11, dataNode.get("attributes").get("doubleAttr").asInt());
+    }
+
+    @JsonApiResource(type = "linkObject", location = "linkLocation")
+    private static class LinkObject {
+        @JsonApiId
+        private String id = "42";
+
+        @JsonApiLink(name = "other", target = "otherLocation")
+        private LinkObject other;
+
+        @JsonApiLink(target = "unnamedLocation")
+        private LinkObject unnamed;
+    }
+
+    @Test
+    public void testLinkSerialization() {
+        LinkObject linkObject = new LinkObject();
+        JsonNode result = mapper.valueToTree(linkObject);
+
+        System.out.println(result);
+        assertTrue(result.has("data"));
+        assertTrue(result.has("links"));
+        assertTrue(result.get("links").isObject());
+        assertEquals(3, result.get("links").size());
+        assertEquals("linkLocation/42", result.get("links").get("self").textValue());
+        assertEquals("otherLocation", result.get("links").get("other").textValue());
+        assertEquals("unnamedLocation", result.get("links").get("unnamed").textValue());
     }
 
 

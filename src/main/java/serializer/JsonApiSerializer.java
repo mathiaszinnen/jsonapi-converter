@@ -58,7 +58,17 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
         Class clazz = obj.getClass();
         ObjectNode linkNode = mapper.createObjectNode();
         if(containsLinks(clazz)) {
-            //later
+            for(Field field: clazz.getDeclaredFields()) {
+                if(field.isAnnotationPresent(JsonApiLink.class)) {
+                    String linkName = field.getDeclaredAnnotation(JsonApiLink.class).name();
+                    String linkTarget = field.getDeclaredAnnotation(JsonApiLink.class).target();
+                    if(linkName.equals("")) { //default value. no name specified
+                        field.setAccessible(true);
+                        linkName = field.getName();
+                    }
+                    linkNode.set(linkName, mapper.valueToTree(linkTarget));
+                }
+            }
         }
         if(!getLocation(clazz).equals("")) {
             if(obj instanceof Collection) {
