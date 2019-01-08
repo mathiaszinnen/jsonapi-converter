@@ -24,7 +24,7 @@ public class JsonApiSerializerTest {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeAll
-    static void setUp(){
+    static void setUp() {
 
         module.addSerializer(new JsonApiSerializer(SimplePojo.class));
         module.addSerializer(new JsonApiSerializer(Collection.class));
@@ -44,6 +44,7 @@ public class JsonApiSerializerTest {
             this.id = id;
         }
     }
+
     private final SimplePojo simple = new SimplePojo("id");
 
     @Test
@@ -83,6 +84,7 @@ public class JsonApiSerializerTest {
         @JsonApiId
         String id = "id";
     }
+
     private static final SelfLinkPojo selfLinkPojo = new SelfLinkPojo();
 
     @Test
@@ -104,15 +106,25 @@ public class JsonApiSerializerTest {
         public int doubleAttr = 11;
 
         @JsonProperty(value = "name")
-        private String methodName() { return stringAttr; }
+        private String methodName() {
+            return stringAttr;
+        }
 
-        public int getNumber() { return 12; }
+        public int getNumber() {
+            return 12;
+        }
 
-        private int getAnotherNumber() { return 13; }
+        private int getAnotherNumber() {
+            return 13;
+        }
 
-        public String getStringAttr() { return stringAttr; }
+        public String getStringAttr() {
+            return stringAttr;
+        }
 
-        public int getDoubleAttr() { return 13; }
+        public int getDoubleAttr() {
+            return 13;
+        }
     }
 
     @Test

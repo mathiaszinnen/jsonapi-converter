@@ -28,7 +28,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         this(null);
     }
 
-    protected JsonApiSerializer(Class<Object> t) {
+    public JsonApiSerializer(Class<Object> t) {
         super(t);
     }
 
@@ -251,8 +251,13 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
 
 
     private void assertHasValidJsonApiAnnotations(Object obj) {
+        //collections
+        if(obj instanceof Collection) {
+            ((Collection) obj).forEach(this::assertHasValidJsonApiAnnotations);
+            return;
+        }
         if (!obj.getClass().isAnnotationPresent(JsonApiResource.class)) {
-            throw new AssertionError("Class needs to be annotated with JsonApiResource annotation");
+            throw new JsonApiSerializationException("Class needs to be annotated with JsonApiResource annotation");
         }
         for (Field field: obj.getClass().getDeclaredFields()) {
             if (field.isAnnotationPresent(JsonApiId.class)) {
@@ -264,6 +269,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
                 return;
             }
         }
-        throw new AssertionError("At least one field or no-arg non-void method needs to be annotated with JsonApiId annotation");
+        throw new JsonApiSerializationException("At least one field or no-arg non-void method needs to be annotated with JsonApiId annotation");
     }
 }
