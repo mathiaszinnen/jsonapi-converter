@@ -251,5 +251,19 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
 
 
     private void assertHasValidJsonApiAnnotations(Object obj) {
+        if (!obj.getClass().isAnnotationPresent(JsonApiResource.class)) {
+            throw new AssertionError("Class needs to be annotated with JsonApiResource annotation");
+        }
+        for (Field field: obj.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(JsonApiId.class)) {
+                return;
+            }
+        }
+        for (Method method: obj.getClass().getDeclaredMethods()) {
+            if (method.isAnnotationPresent(JsonApiId.class) && isGettable(method)) {
+                return;
+            }
+        }
+        throw new AssertionError("At least one field or no-arg non-void method needs to be annotated with JsonApiId annotation");
     }
 }
