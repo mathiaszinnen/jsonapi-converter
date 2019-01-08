@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -77,6 +78,18 @@ public class JsonApiSerializerTest {
         assertEquals("simple", data.get(0).get("type").textValue());
         assertEquals(2, data.get(1).get("attributes").size());
         assertEquals("something", data.get(2).get("attributes").get("anotherAttribute").textValue());
+    }
+
+    @Test
+    void testEmptyCollectionSerialization() {
+        List<SimplePojo> emptyList = Collections.emptyList();
+
+        JsonNode result = mapper.valueToTree(emptyList);
+
+        System.out.println(result);
+        JsonNode data = result.get("data");
+        assertEquals(JsonNodeType.ARRAY, data.getNodeType());
+        assertEquals(0, data.size());
     }
 
     @JsonApiResource(type = "selflinker", location = "http://www.example.com/repository")
