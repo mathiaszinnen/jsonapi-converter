@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import exceptions.JsonApiSerializationException;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -114,8 +115,18 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
         return node;
     }
 
-    private JsonNode getJsonApiAttributes(Object data) throws IllegalAccessException {
+    /**
+     * Get attributes of a jsonAPI resource object
+     * (i.e. public fields, @JsonProperty annotated fields, getter methods, @JsonProperty annotated methods).
+     * Fields or methods annotated with @JsonApiId are ignored, since they are serialized elsewhere.
+     * @param data the resource object
+     * @return a JsonNode containing all visible attributes except jsonAPI id
+     * @throws IllegalAccessException if the value of a field cannot be determined
+     * @throws InvocationTargetException if the invocation of a attribute method fails
+     */
+    private JsonNode getJsonApiAttributes(Object data) throws IllegalAccessException, InvocationTargetException {
         ObjectNode node = mapper.createObjectNode();
+        //serialize fields
         for(Field field: data.getClass().getDeclaredFields()) {
             if(field.isAnnotationPresent(JsonApiId.class) ) {
                 continue; //do not serialize id twice.
@@ -129,10 +140,53 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
                 node.set(field.getName(), mapper.valueToTree(field.get(data)));
             }
         }
+        //serialize getters and @JsonProperty annotated methods
+        for(Method method: data.getClass().getDeclaredMethods()) {
+            method.setAccessible(true);
+            if(method.isAnnotationPresent(JsonProperty.class)) {
+                if(!isGettable(method)) {
+                    throw new JsonApiSerializationException("@JsonProperty annotated method needs to have a non void return value" +
+                            "and no parameters.");
+                }
+                String attributeName = method.getDeclaredAnnotation(JsonProperty.class).value();
+                if(!node.has(attributeName)) {
+                    node.set(attributeName, mapper.valueToTree(method.invoke(data)));
+                }
+            }
+            if(isGetter(method)) {
+                if(!node.has(getterAttribute(method))) {
+                    node.set(getterAttribute(method), mapper.valueToTree(method.invoke(data)));
+                }
+            }
+        }
         return node;
     }
 
-    private String getJsonApiId(Object data) throws IllegalAccessException, InvocationTargetException {
+    private String getterAttribute(Method method) {
+        return method.getName().substring(3); //remove the leading "get"
+    }
+
+    private boolean isGetter(Method method) {
+        return method.getName().startsWith("get")
+                && Modifier.isPublic(method.getModifiers())
+                && isGettable(method);
+    }
+
+    private boolean isGettable(Method method) {
+        return method.getParameterCount() == 0
+                && !method.getReturnType().equals(Void.TYPE);
+    }
+
+    /**
+     * Get the jsonAPI id of a a jsonAPI resource object
+     * @param data the resource object
+     * @return the value of a @JsonApiId annotated field or method. If there are multiple @JsonApiId annotations present,
+     * annotated fields are considered first.
+     * @throws IllegalAccessException if the value of the id field cannot be determined
+     * @throws InvocationTargetException if the invocation of the id method fails
+     * @throws IllegalArgumentException if there is no JsonApiId annotated field or method
+     */
+    private String getJsonApiId(Object data) throws IllegalAccessException, InvocationTargetException, IllegalArgumentException {
         for(Field field: data.getClass().getDeclaredFields()) {
             field.setAccessible(true);
             if(field.isAnnotationPresent(JsonApiId.class)
@@ -151,6 +205,11 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
         throw new IllegalArgumentException(data.getClass().getCanonicalName() + " contains no @JsonApiId annotation");
     }
 
+    /**
+     * Get the jsonAPI type of a jsonAPI resource object
+     * @param data the resource object
+     * @return the type of the object, as specified in @JsonApiResource annotation
+     */
     private String getJsonApiType(Object data) {
         return data
                 .getClass()
