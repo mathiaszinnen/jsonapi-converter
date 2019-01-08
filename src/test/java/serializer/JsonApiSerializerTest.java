@@ -2,6 +2,7 @@ package serializer;
 
 import annotations.JsonApiId;
 import annotations.JsonApiResource;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -90,4 +91,42 @@ public class JsonApiSerializerTest {
         assertEquals(2, result.size());
         assertEquals("http://www.example.com/repository/id", result.get("links").get("self").textValue());
     }
+
+    @JsonApiResource(type = "GetterObject")
+    private static class GetterObject {
+        @JsonApiId
+        private String id = "idValue";
+
+        private String stringAttr = "stringVal";
+
+        public int doubleAttr = 11;
+
+        @JsonProperty(value = "name")
+        private String methodName() { return stringAttr; }
+
+        public int getNumber() { return 12; }
+
+        private int getAnotherNumber() { return 13; }
+
+        public String getStringAttr() { return stringAttr; }
+
+        public int getDoubleAttr() { return 13; }
+    }
+
+    @Test
+    public void testMethodSerialization() {
+        GetterObject getterObject = new GetterObject();
+        JsonNode result = mapper.valueToTree(getterObject);
+
+        System.out.println(result);
+        JsonNode dataNode = result.get("data");
+        assertEquals("idValue", dataNode.get("id").textValue());
+        assertEquals(4, dataNode.get("attributes").size());
+        assertEquals(12, dataNode.get("attributes").get("number").asInt());
+        assertEquals("stringVal", dataNode.get("attributes").get("name").textValue());
+        assertEquals("stringVal", dataNode.get("attributes").get("stringAttr").textValue());
+        assertEquals(11, dataNode.get("attributes").get("doubleAttr").asInt());
+    }
+
+
 }
