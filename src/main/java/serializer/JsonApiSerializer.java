@@ -57,6 +57,7 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
     private void serializeLinks(Object obj, JsonGenerator gen) throws InvocationTargetException, IllegalAccessException, IOException {
         Class clazz = obj.getClass();
         ObjectNode linkNode = mapper.createObjectNode();
+        //process JsonApiLink annotations
         if(containsLinks(clazz)) {
             for(Field field: clazz.getDeclaredFields()) {
                 if(field.isAnnotationPresent(JsonApiLink.class)) {
@@ -70,6 +71,7 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
                 }
             }
         }
+        //create selflink
         if(!getLocation(clazz).equals("")) {
             if(obj instanceof Collection) {
                 //selflink = location
