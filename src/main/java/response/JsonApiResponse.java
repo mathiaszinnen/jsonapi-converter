@@ -9,6 +9,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Objects;
 
 public class JsonApiResponse {
 
@@ -34,16 +35,13 @@ public class JsonApiResponse {
 
 
         private ResponseBuilder(JsonApiResponse instance) {
-            initObjectMapper();
             this.instance = instance;
-        }
-
-        private void initObjectMapper() {
-
         }
 
         @Override
         public Buildable data(Object entity) {
+            Objects.requireNonNull(entity);
+
             module.addSerializer(new JsonApiSerializer(entity.getClass()));
             mapper.registerModule(module);
 
@@ -54,6 +52,8 @@ public class JsonApiResponse {
 
         @Override
         public Buildable data(Collection<?> entityCollection) {
+            Objects.requireNonNull(entityCollection);
+
             if(!entityCollection.isEmpty()) {
                 module.addSerializer(new JsonApiSerializer(entityCollection.toArray()[0].getClass()));
             }
