@@ -163,7 +163,10 @@ public class JsonApiSerializer<T extends Object> extends StdSerializer<Object> {
     }
 
     private String getterAttribute(Method method) {
-        return method.getName().substring(3); //remove the leading "get"
+        //remove the leading "get" and lowercase first letter to match attribute name conventions
+        char[] chars = method.getName().substring(3).toCharArray();
+        chars[0] = Character.toLowerCase(chars[0]);
+        return new String(chars);
     }
 
     private boolean isGetter(Method method) {
