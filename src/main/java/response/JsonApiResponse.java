@@ -68,7 +68,7 @@ public class JsonApiResponse {
 
         @Override
         public Response build() {
-            updateLinks();
+            updateLinks(instance.document.get("data"));
 
             return Response
                     .status(instance.statusCode)
@@ -80,17 +80,23 @@ public class JsonApiResponse {
         /**
          * Updates existing, possibly relative links so they hold the absolute address afterwards.
          */
-        private void updateLinks() {
-            if (instance.document.has("links")) {
-                ObjectNode linkNode = (ObjectNode) instance.document.get("links");
-                URI baseUri = instance.uriInfo.getAbsolutePath().resolve("/");
-
-                linkNode
-                        .fieldNames()
-                        .forEachRemaining(
-                                fn -> linkNode.set(fn, updateSingleLinkNode(baseUri, linkNode, fn))
-                        );
+        private void updateLinks(JsonNode dataNode) {
+            if(dataNode.isArray()) {
+                for(JsonNode dataElement: dataNode) {
+                    updateLinks(dataElement);
                 }
+            } else {
+                if (dataNode.has("links")) {
+                    ObjectNode linkNode = (ObjectNode) dataNode.get("links");
+                    URI baseUri = instance.uriInfo.getAbsolutePath().resolve("/");
+
+                    linkNode
+                            .fieldNames()
+                            .forEachRemaining(
+                                    fn -> linkNode.set(fn, updateSingleLinkNode(baseUri, linkNode, fn))
+                            );
+                }
+            }
         }
 
         private JsonNode updateSingleLinkNode(URI baseUri, ObjectNode linkNode, String nodeName) {

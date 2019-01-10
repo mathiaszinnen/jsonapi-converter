@@ -73,6 +73,34 @@ public class JsonApiResponseTest {
     }
 
     @Test
+    public void testAddLinkedCollection() {
+        List<LinkObject> list = Arrays.asList(new LinkObject("0"), new LinkObject("1"));
+
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(list)
+                .addLink("top-level-link", URI.create("here"))
+                .build();
+
+        JsonNode resultNode = getEntityNode(result);
+        System.out.println(resultNode);
+        assertEquals(
+                "http://BASEPATH/here",
+                resultNode.get("links").get("top-level-link").textValue());
+        assertEquals("0", resultNode.get("data").get(0).get("id").textValue());
+        assertEquals("1", resultNode.get("data").get(1).get("id").textValue());
+        assertEquals(
+                "http://BASEPATH/otherLocation",
+                resultNode.get("data").get(0).get("links").get("other").textValue());
+        assertEquals(
+                "http://BASEPATH/unnamedLocation",
+                resultNode.get("data").get(1).get("links").get("unnamed").textValue());
+        assertEquals(
+                "http://BASEPATH/linkLocation/0",
+                resultNode.get("data").get(0).get("links").get("self").textValue());
+    }
+
+    @Test
     public void testAddLinkedData() {
         LinkObject linked = new LinkObject();
         Response result = JsonApiResponse
@@ -85,10 +113,10 @@ public class JsonApiResponseTest {
         assertEquals("linkObject", resultNode.get("data").get("type").textValue());
         assertEquals("42", resultNode.get("data").get("id").textValue());
         assertEquals(0, resultNode.get("data").get("attributes").size());
-        assertEquals(3, resultNode.get("links").size());
-        assertEquals("http://BASEPATH/linkLocation/42", resultNode.get("links").get("self").textValue());
-        assertEquals("http://BASEPATH/unnamedLocation", resultNode.get("links").get("unnamed").textValue());
-        assertEquals("http://BASEPATH/otherLocation", resultNode.get("links").get("other").textValue());
+        assertEquals(3, resultNode.get("data").get("links").size());
+        assertEquals("http://BASEPATH/linkLocation/42", resultNode.get("data").get("links").get("self").textValue());
+        assertEquals("http://BASEPATH/unnamedLocation", resultNode.get("data").get("links").get("unnamed").textValue());
+        assertEquals("http://BASEPATH/otherLocation", resultNode.get("data").get("links").get("other").textValue());
     }
 
     @Test
