@@ -47,6 +47,7 @@ public class JsonApiResponse {
             mapper.registerModule(module);
 
             instance.document = mapper.valueToTree(entity);
+            createSelfLink(instance.document);
 
             return this;
         }
@@ -62,8 +63,32 @@ public class JsonApiResponse {
             mapper.registerModule(module);
 
             instance.document = mapper.valueToTree(entityCollection);
+            createSelfLink(instance.document);
+            instance.document.get("data").elements().forEachRemaining(
+                    el -> createResourceSelfLink( (ObjectNode) el)
+            );
 
             return this;
+        }
+
+        private void createResourceSelfLink(ObjectNode el) {
+            ObjectNode linkNode;
+            if(!el.has("links")) {
+                linkNode = mapper.createObjectNode();
+            } else {
+                linkNode = (ObjectNode) el.get("links");
+            }
+            String id = el.get("id").textValue();
+            URI ref = instance.uriInfo.getAbsolutePath().resolve("/").resolve(id);
+            linkNode.set("self", mapper.valueToTree(ref.toString()));
+            el.set("links", linkNode);
+        }
+
+        private void createSelfLink(JsonNode document) {
+            ObjectNode linkNode = mapper.createObjectNode();
+            String selfRef = instance.uriInfo.getAbsolutePath().toString();
+            linkNode.set("self", mapper.valueToTree(selfRef));
+            ((ObjectNode) document).set("links", linkNode);
         }
 
         @Override

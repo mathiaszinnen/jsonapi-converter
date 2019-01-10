@@ -40,6 +40,7 @@ public class JsonApiResponseTest {
         assertEquals("idValue", resultNode.get("data").get("id").textValue());
         assertEquals("something", resultNode.get("data").get("attributes").get("anotherAttribute").textValue());
         assertEquals(42, resultNode.get("data").get("attributes").get("yetAnother").asInt());
+        assertEquals("http://BASEPATH", resultNode.get("links").get("self").textValue());
     }
 
     @Test
@@ -58,6 +59,13 @@ public class JsonApiResponseTest {
         assertEquals("1", resultNode.get("data").get(0).get("id").textValue());
         assertEquals("2", resultNode.get("data").get(1).get("id").textValue());
         assertEquals("http://BASEPATH/du", resultNode.get("links").get("hallo").textValue());
+        assertEquals("http://BASEPATH", resultNode.get("links").get("self").textValue());
+        assertEquals(
+                "http://BASEPATH/1",
+                resultNode.get("data").get(0).get("links").get("self").textValue());
+        assertEquals(
+                "http://BASEPATH/2",
+                resultNode.get("data").get(1).get("links").get("self").textValue());
     }
 
     @Test
@@ -129,7 +137,7 @@ public class JsonApiResponseTest {
 
         JsonNode resultNode = getEntityNode(result);
         System.out.println(resultNode);
-        assertEquals(1, resultNode.get("links").size());
+        assertEquals(2, resultNode.get("links").size());
         assertEquals("http://BASEPATH/location", resultNode.get("links").get("name").textValue());
     }
 
@@ -143,7 +151,7 @@ public class JsonApiResponseTest {
 
         JsonNode resultNode = getEntityNode(result);
         System.out.println(resultNode);
-        assertEquals(1, resultNode.get("links").size());
+        assertEquals(2, resultNode.get("links").size());
         assertEquals("http://www.google.com", resultNode.get("links").get("google").textValue());
     }
 
