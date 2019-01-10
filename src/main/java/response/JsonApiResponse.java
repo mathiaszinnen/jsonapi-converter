@@ -83,7 +83,7 @@ public class JsonApiResponse {
         private void updateLinks() {
             if (instance.document.has("links")) {
                 ObjectNode linkNode = (ObjectNode) instance.document.get("links");
-                URI baseUri = instance.uriInfo.getAbsolutePath();
+                URI baseUri = instance.uriInfo.getAbsolutePath().resolve("/");
 
                 linkNode
                         .fieldNames()
@@ -114,7 +114,7 @@ public class JsonApiResponse {
                 ((ObjectNode) instance.document).set("links", mapper.createObjectNode());
             }
 
-            URI absRef = instance.uriInfo.getAbsolutePath().resolve(ref);
+            URI absRef = instance.uriInfo.getAbsolutePath().resolve("/").resolve(ref);
 
             ((ObjectNode) instance.document.get("links"))
                     .set(name, mapper.valueToTree(absRef.toString()));

@@ -24,7 +24,7 @@ public class JsonApiResponseTest {
 
     @BeforeAll
     public static void setUp() {
-        when(uriInfo.getAbsolutePath()).thenReturn(URI.create("http://BASEPATH/"));
+        when(uriInfo.getAbsolutePath()).thenReturn(URI.create("http://BASEPATH"));
     }
 
     @Test
