@@ -83,7 +83,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         else { //data is single resource object
             //serialize the object
             dataNode = createDataNode(obj);
-            serializeLinks(dataNode, (ObjectNode) dataNode);
         }
 
 
