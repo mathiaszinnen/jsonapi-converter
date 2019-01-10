@@ -3,6 +3,7 @@ package response;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import serializer.JsonApiSerializer;
 
 import javax.ws.rs.core.Response;
@@ -67,12 +68,35 @@ public class JsonApiResponse {
 
         @Override
         public Response build() {
+            updateLinks();
 
             return Response
                     .status(instance.statusCode)
                     .type(JSONAPI_TYPE)
                     .entity(instance.document)
                     .build();
+        }
+
+        /**
+         * Updates existing, possibly relative links so they hold the absolute address afterwards.
+         */
+        private void updateLinks() {
+            if (instance.document.has("links")) {
+                ObjectNode linkNode = (ObjectNode) instance.document.get("links");
+                URI baseUri = instance.uriInfo.getAbsolutePath();
+
+                linkNode
+                        .fieldNames()
+                        .forEachRemaining(
+                                fn -> linkNode.set(fn, updateSingleLinkNode(baseUri, linkNode, fn))
+                        );
+                }
+        }
+
+        private JsonNode updateSingleLinkNode(URI baseUri, ObjectNode linkNode, String nodeName) {
+            String relativeLink = linkNode.get(nodeName).textValue();
+            URI absUri = baseUri.resolve(relativeLink);
+            return mapper.valueToTree(absUri);
         }
 
         @Override
