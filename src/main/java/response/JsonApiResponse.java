@@ -10,7 +10,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.Collection;
-import java.util.Objects;
+
+import static util.Assert.assertHasValidJsonApiAnnotations;
 
 public class JsonApiResponse {
 
@@ -41,7 +42,7 @@ public class JsonApiResponse {
 
         @Override
         public Buildable data(Object entity) {
-            Objects.requireNonNull(entity);
+            assertHasValidJsonApiAnnotations(entity);
 
             module.addSerializer(new JsonApiSerializer(entity.getClass()));
             mapper.registerModule(module);
@@ -54,7 +55,7 @@ public class JsonApiResponse {
 
         @Override
         public Buildable data(Collection<?> entityCollection) {
-            Objects.requireNonNull(entityCollection);
+            assertHasValidJsonApiAnnotations(entityCollection);
 
             if(!entityCollection.isEmpty()) {
                 module.addSerializer(new JsonApiSerializer(entityCollection.toArray()[0].getClass()));

@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +27,28 @@ public class JsonApiResponseTest {
     @BeforeAll
     public static void setUp() {
         when(uriInfo.getAbsolutePath()).thenReturn(URI.create("http://BASEPATH"));
+    }
+
+    @Test
+    public void testGetResponse() {
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(simplePojo)
+                .build();
+
+        assertEquals(200, result.getStatus());
+        assertEquals("application/vnd.api+json", result.getHeaderString("Content-Type"));
+        assertTrue(result.hasEntity());
+    }
+
+    @Test
+    public void testAddWrongEntity() {
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(new Object())
+                .build();
+
+
     }
 
     @Test

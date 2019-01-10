@@ -21,6 +21,9 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static util.Assert.assertHasValidJsonApiAnnotations;
+import static util.Assert.isGettable;
+
 public class JsonApiSerializer<T> extends StdSerializer<Object> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -182,11 +185,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
                 && isGettable(method);
     }
 
-    private boolean isGettable(Method method) {
-        return method.getParameterCount() == 0
-                && !method.getReturnType().equals(Void.TYPE);
-    }
-
     /**
      * Get the jsonAPI id of a a jsonAPI resource object
      * @param data the resource object
@@ -243,26 +241,4 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         //later
     }
 
-
-    private void assertHasValidJsonApiAnnotations(Object obj) {
-        //collections
-        if(obj instanceof Collection) {
-            ((Collection) obj).forEach(this::assertHasValidJsonApiAnnotations);
-            return;
-        }
-        if (!obj.getClass().isAnnotationPresent(JsonApiResource.class)) {
-            throw new JsonApiSerializationException("Class needs to be annotated with JsonApiResource annotation");
-        }
-        for (Field field: obj.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(JsonApiId.class)) {
-                return;
-            }
-        }
-        for (Method method: obj.getClass().getDeclaredMethods()) {
-            if (method.isAnnotationPresent(JsonApiId.class) && isGettable(method)) {
-                return;
-            }
-        }
-        throw new JsonApiSerializationException("At least one field or no-arg non-void method needs to be annotated with JsonApiId annotation");
-    }
 }
