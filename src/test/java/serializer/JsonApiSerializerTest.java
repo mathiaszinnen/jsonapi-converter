@@ -84,8 +84,8 @@ public class JsonApiSerializerTest {
         JsonNode result = mapper.valueToTree(selfLinkPojo);
 
         System.out.println(result);
-        assertEquals(2, result.size());
-        assertEquals("http://www.example.com/repository/id", result.get("links").get("self").textValue());
+        assertEquals(1, result.size());
+        assertEquals("http://www.example.com/repository/id", result.get("data").get("links").get("self").textValue());
     }
 
     @Test
@@ -110,11 +110,11 @@ public class JsonApiSerializerTest {
 
         System.out.println(result);
         assertTrue(result.has("data"));
-        assertTrue(result.has("links"));
-        assertTrue(result.get("links").isObject());
-        assertEquals(3, result.get("links").size());
-        assertEquals("linkLocation/42", result.get("links").get("self").textValue());
-        assertEquals("otherLocation", result.get("links").get("other").textValue());
-        assertEquals("unnamedLocation", result.get("links").get("unnamed").textValue());
+        assertTrue(result.get("data").has("links"));
+        assertTrue(result.get("data").get("links").isObject());
+        assertEquals(3, result.get("data").get("links").size());
+        assertEquals("linkLocation/42", result.get("data").get("links").get("self").textValue());
+        assertEquals("otherLocation", result.get("data").get("links").get("other").textValue());
+        assertEquals("unnamedLocation", result.get("data").get("links").get("unnamed").textValue());
     }
 }

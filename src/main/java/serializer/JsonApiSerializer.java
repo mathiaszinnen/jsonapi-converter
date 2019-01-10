@@ -41,7 +41,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         try{
             serializeData(obj, gen);
 
-            serializeLinks(obj, gen);
+//            serializeLinks(obj, gen);
 
             serializeErrors(obj, gen);
 
@@ -53,45 +53,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         }
 
         gen.writeEndObject();
-    }
-
-    private void serializeLinks(Object obj, JsonGenerator gen) throws InvocationTargetException, IllegalAccessException, IOException {
-        if(obj instanceof Collection) {
-            for(Object el: (Collection) obj) {
-                serializeLinks(el, gen);
-            }
-            return;
-        }
-        Class clazz = obj.getClass();
-        ObjectNode linkNode = mapper.createObjectNode();
-        //process JsonApiLink annotations
-        if(containsLinks(clazz)) {
-            for(Field field: clazz.getDeclaredFields()) {
-                if(field.isAnnotationPresent(JsonApiLink.class)) {
-                    String linkName = field.getDeclaredAnnotation(JsonApiLink.class).name();
-                    String linkTarget = field.getDeclaredAnnotation(JsonApiLink.class).target();
-                    if(linkName.equals("")) { //default value. no name specified
-                        field.setAccessible(true);
-                        linkName = field.getName();
-                    }
-                    linkNode.set(linkName, mapper.valueToTree(linkTarget));
-                }
-            }
-        }
-        //create selflink
-        if(!getLocation(clazz).equals("")) {
-            if(obj instanceof Collection) {
-                //selflink = location
-                linkNode.put("self", getLocation(clazz));
-            }
-            else {
-                //selflink = location/id
-                linkNode.put("self", getLocation(clazz) + "/" + getJsonApiId(obj));
-            }
-        }
-        if(linkNode.size() > 0) {
-           gen.writeObjectField("links", linkNode);
-        }
     }
 
     private String getLocation(Class clazz) {
@@ -121,7 +82,9 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         else { //data is single resource object
             //serialize the object
             dataNode = createDataNode(obj);
+            serializeLinks(dataNode, (ObjectNode) dataNode);
         }
+
 
         gen.writeObjectField("data", dataNode);
     }
@@ -131,6 +94,34 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         node.put("type", getJsonApiType(data));
         node.put("id", getJsonApiId(data));
         node.set("attributes", getJsonApiAttributes(data));
+        node = serializeLinks(data, node);
+        return node;
+    }
+
+    private ObjectNode serializeLinks(Object obj, ObjectNode node) throws InvocationTargetException, IllegalAccessException {
+        Class clazz = obj.getClass();
+        ObjectNode linkNode = mapper.createObjectNode();
+        //process JsonApiLink annotations
+        if(containsLinks(clazz)) {
+            for(Field field: clazz.getDeclaredFields()) {
+                if(field.isAnnotationPresent(JsonApiLink.class)) {
+                    String linkName = field.getDeclaredAnnotation(JsonApiLink.class).name();
+                    String linkTarget = field.getDeclaredAnnotation(JsonApiLink.class).target();
+                    if(linkName.equals("")) { //default value. no name specified
+                        field.setAccessible(true);
+                        linkName = field.getName();
+                    }
+                    linkNode.set(linkName, mapper.valueToTree(linkTarget));
+                }
+            }
+        }
+        //create selflink
+        if(!getLocation(clazz).equals("")) {
+                linkNode.put("self", getLocation(clazz) + "/" + getJsonApiId(obj));
+        }
+        if(linkNode.size() > 0) {
+            node.set("links", linkNode);
+        }
         return node;
     }
 
