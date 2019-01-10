@@ -6,6 +6,13 @@ import annotations.JsonApiResource;
 
 @JsonApiResource(type = "linkObject", location = "linkLocation")
 public class LinkObject {
+    public LinkObject() {
+    }
+
+    public LinkObject(String id) {
+        this.id = id;
+    }
+
     @JsonApiId
     private String id = "42";
 

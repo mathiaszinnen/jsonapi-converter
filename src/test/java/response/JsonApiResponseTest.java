@@ -1,6 +1,7 @@
 package response;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import models.LinkObject;
 import models.SimplePojo;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
@@ -11,6 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -39,6 +43,36 @@ public class JsonApiResponseTest {
         assertEquals("idValue", resultNode.get("data").get("id").textValue());
         assertEquals("something", resultNode.get("data").get("attributes").get("anotherAttribute").textValue());
         assertEquals(42, resultNode.get("data").get("attributes").get("yetAnother").asInt());
+    }
+
+    @Test
+    public void testAddCollection() {
+        List<SimplePojo> list = Arrays.asList(new SimplePojo("1"), new SimplePojo("2"));
+
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(list)
+                .addLink("hallo",URI.create("du"))
+                .build();
+
+        JsonNode resultNode = getEntityNode(result);
+        assertEquals(JsonNodeType.ARRAY, resultNode.get("data").getNodeType());
+        assertEquals(2, resultNode.get("data").size());
+        assertEquals("1", resultNode.get("data").get(0).get("id").textValue());
+        assertEquals("2", resultNode.get("data").get(1).get("id").textValue());
+        assertEquals("http://BASEPATH/du", resultNode.get("links").get("hallo").textValue());
+    }
+
+    @Test
+    public void testAddEmptyCollection() {
+        List<SimplePojo> list = new LinkedList<>();
+
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(list)
+                .build();
+
+        assertEquals(0, getEntityNode(result).get("data").size());
     }
 
     @Test
