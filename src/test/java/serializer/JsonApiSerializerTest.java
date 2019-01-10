@@ -134,5 +134,11 @@ public class JsonApiSerializerTest {
         assertEquals(
                 2,
                 result.get("data").get("relationships").get("related").size());
+        assertEquals(
+                "linkObject",
+                result.get("data").get("relationships").get("named").get("type").textValue());
+        assertEquals(
+                "42",
+                result.get("data").get("relationships").get("named").get("id").textValue());
     }
 }

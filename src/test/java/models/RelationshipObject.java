@@ -11,4 +11,7 @@ public class RelationshipObject {
 
     @JsonApiRelationship
     SimplePojo related = new SimplePojo("relatedObject");
+
+    @JsonApiRelationship(name = "named")
+    LinkObject namedRelated = new LinkObject();
 }
