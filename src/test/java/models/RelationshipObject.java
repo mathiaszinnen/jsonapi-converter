@@ -4,10 +4,10 @@ import annotations.JsonApiId;
 import annotations.JsonApiRelationship;
 import annotations.JsonApiResource;
 
-@JsonApiResource(type = "relationship")
+@JsonApiResource(type = "relationshipType")
 public class RelationshipObject {
     @JsonApiId
-    String id = "relationship";
+    String id = "relationshipId";
 
     @JsonApiRelationship
     SimplePojo related = new SimplePojo("relatedObject");

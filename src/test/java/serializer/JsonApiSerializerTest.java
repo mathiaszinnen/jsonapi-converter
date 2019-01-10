@@ -124,15 +124,15 @@ public class JsonApiSerializerTest {
         System.out.println(result);
         assertTrue(result.get("data").has("relationships"));
         assertEquals(JsonNodeType.OBJECT, result.get("data").getNodeType());
-        assertTrue(result.get("data").get("relationships").has("SimplePojo"));
+        assertTrue(result.get("data").get("relationships").has("related"));
         assertEquals(
                 "relatedObject",
-                result.get("data").get("relationships").get("SimplePojo").get("id").textValue());
+                result.get("data").get("relationships").get("related").get("id").textValue());
         assertEquals(
                 "simple",
-                result.get("data").get("relationships").get("SimplePojo").get("type").textValue());
+                result.get("data").get("relationships").get("related").get("type").textValue());
         assertEquals(
                 2,
-                result.get("data").get("relationships").get("SimplePojo").get("attributes").size());
+                result.get("data").get("relationships").get("related").size());
     }
 }

@@ -2,6 +2,7 @@ package serializer;
 
 import annotations.JsonApiId;
 import annotations.JsonApiLink;
+import annotations.JsonApiRelationship;
 import annotations.JsonApiResource;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -48,7 +49,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
 
             serializeIncluded(obj, gen);
 
-            serializeRelationships(obj, gen);
         } catch (Exception e) {
             throw new IOException("Serialization failed", e);
         }
@@ -62,8 +62,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
     }
 
     private boolean containsLinks(Class clazz) {
-        return Arrays.stream(
-                clazz
+        return Arrays.stream(clazz
                         .getDeclaredFields())
                         .anyMatch(field -> field.isAnnotationPresent(JsonApiLink.class));
     }
@@ -95,6 +94,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         node.put("id", getJsonApiId(data));
         node.set("attributes", getJsonApiAttributes(data));
         serializeLinks(data, node);
+        serializeRelationships(data, node);
         return node;
     }
 
@@ -104,6 +104,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         //process JsonApiLink annotations
         if(containsLinks(clazz)) {
             for(Field field: clazz.getDeclaredFields()) {
+                field.setAccessible(true);
                 if(field.isAnnotationPresent(JsonApiLink.class)) {
                     String linkName = field.getDeclaredAnnotation(JsonApiLink.class).name();
                     String linkTarget = field.getDeclaredAnnotation(JsonApiLink.class).target();
@@ -122,6 +123,38 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         if(linkNode.size() > 0) {
             node.set("links", linkNode);
         }
+    }
+
+    private void serializeRelationships(Object obj, ObjectNode node) throws IllegalAccessException, InvocationTargetException {
+        Class clazz = obj.getClass();
+        ObjectNode relationshipsNode = mapper.createObjectNode();
+        //fill relationshipsNode
+        for(Field field: clazz.getDeclaredFields()) {
+            field.setAccessible(true);
+            if(field.isAnnotationPresent(JsonApiRelationship.class)) {
+                String name = field.getDeclaredAnnotation(JsonApiRelationship.class).name();
+                if(name.equals("")) {
+                    name = field.getName();
+                }
+                ObjectNode otherNode = mapper.createObjectNode();
+                Object other = field.get(obj);
+                String otherId = getJsonApiId(other);
+                String otherType = getJsonApiType(other);
+                otherNode.set("id", mapper.valueToTree(otherId));
+                otherNode.set("type", mapper.valueToTree(otherType));
+                relationshipsNode.set(name, otherNode);
+            }
+        }
+
+        if(relationshipsNode.size() > 0) {
+            node.set("relationships", relationshipsNode);
+        }
+    }
+
+    private boolean containsRelationships(Class clazz) {
+        return Arrays.stream(clazz
+                .getDeclaredFields())
+                .anyMatch(field -> field.isAnnotationPresent(JsonApiRelationship.class));
     }
 
     /**
@@ -228,9 +261,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         //later
     }
 
-    private void serializeRelationships(Object doc, JsonGenerator gen) {
-        //later
-    }
+
 
     private void serializeIncluded(Object doc, JsonGenerator gen) {
         //later
