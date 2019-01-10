@@ -41,8 +41,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         try{
             serializeData(obj, gen);
 
-//            serializeLinks(obj, gen);
-
             serializeErrors(obj, gen);
 
             serializeIncluded(obj, gen);
@@ -94,11 +92,11 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         node.put("type", getJsonApiType(data));
         node.put("id", getJsonApiId(data));
         node.set("attributes", getJsonApiAttributes(data));
-        node = serializeLinks(data, node);
+        serializeLinks(data, node);
         return node;
     }
 
-    private ObjectNode serializeLinks(Object obj, ObjectNode node) throws InvocationTargetException, IllegalAccessException {
+    private void serializeLinks(Object obj, ObjectNode node) throws InvocationTargetException, IllegalAccessException {
         Class clazz = obj.getClass();
         ObjectNode linkNode = mapper.createObjectNode();
         //process JsonApiLink annotations
@@ -122,7 +120,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         if(linkNode.size() > 0) {
             node.set("links", linkNode);
         }
-        return node;
     }
 
     /**
