@@ -1,8 +1,7 @@
 package response;
 
-import annotations.JsonApiId;
-import annotations.JsonApiResource;
 import com.fasterxml.jackson.databind.JsonNode;
+import models.SimplePojo;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
@@ -12,21 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class JsonApiResponseTest {
     //mock uriinfo
 
-    @JsonApiResource(type = "simple")
-    public static class SimplePojo {
-
-        @JsonApiId
-        public final String id;
-        public String anotherAttribute = "something";
-        public int yetAnother = 42;
-
-        private SimplePojo(String id) {
-            this.id = id;
-        }
-    }
-
     @Test
-    void testGetResponse() {
+    public void testGetResponse() {
         SimplePojo simplePojo = new SimplePojo("idValue");
 
         Response result = JsonApiResponse

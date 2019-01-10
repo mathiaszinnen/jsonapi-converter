@@ -1,13 +1,13 @@
 package serializer;
 
-import annotations.JsonApiId;
-import annotations.JsonApiLink;
-import annotations.JsonApiResource;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import models.GetterObject;
+import models.LinkObject;
+import models.SelfLinkPojo;
+import models.SimplePojo;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -33,23 +33,9 @@ public class JsonApiSerializerTest {
         mapper.registerModule(module);
     }
 
-    @JsonApiResource(type = "simple")
-    private static class SimplePojo {
-
-        @JsonApiId
-        public final String id;
-        public String anotherAttribute = "something";
-        public int yetAnother = 42;
-
-        private SimplePojo(String id) {
-            this.id = id;
-        }
-    }
-
-    private final SimplePojo simple = new SimplePojo("id");
-
     @Test
-    void testSimplePojoSerialization() {
+    public void testSimplePojoSerialization() {
+        SimplePojo simple = new SimplePojo("id");
         JsonNode result = mapper.valueToTree(simple);
 
         System.out.println(result);
@@ -62,7 +48,7 @@ public class JsonApiSerializerTest {
     }
 
     @Test
-    void testCollectionSerialization() {
+    public void testCollectionSerialization() {
         List<SimplePojo> pojoList = Arrays.asList(
                 new SimplePojo("1"), new SimplePojo("2"), new SimplePojo("3"));
 
@@ -81,7 +67,7 @@ public class JsonApiSerializerTest {
     }
 
     @Test
-    void testEmptyCollectionSerialization() {
+    public void testEmptyCollectionSerialization() {
         List<SimplePojo> emptyList = Collections.emptyList();
 
         JsonNode result = mapper.valueToTree(emptyList);
@@ -92,52 +78,14 @@ public class JsonApiSerializerTest {
         assertEquals(0, data.size());
     }
 
-    @JsonApiResource(type = "selflinker", location = "http://www.example.com/repository")
-    private static class SelfLinkPojo {
-        @JsonApiId
-        String id = "id";
-    }
-
-    private static final SelfLinkPojo selfLinkPojo = new SelfLinkPojo();
-
     @Test
     public void testSelfLinkGeneration() {
+        SelfLinkPojo selfLinkPojo = new SelfLinkPojo();
         JsonNode result = mapper.valueToTree(selfLinkPojo);
 
         System.out.println(result);
         assertEquals(2, result.size());
         assertEquals("http://www.example.com/repository/id", result.get("links").get("self").textValue());
-    }
-
-    @JsonApiResource(type = "GetterObject")
-    private static class GetterObject {
-        @JsonApiId
-        private String id = "idValue";
-
-        private String stringAttr = "stringVal";
-
-        public int doubleAttr = 11;
-
-        @JsonProperty(value = "name")
-        private String methodName() {
-            return stringAttr;
-        }
-
-        public int getNumber() {
-            return 12;
-        }
-
-        private int getAnotherNumber() {
-            return 13;
-        }
-
-        public String getStringAttr() {
-            return stringAttr;
-        }
-
-        public int getDoubleAttr() {
-            return 13;
-        }
     }
 
     @Test
@@ -155,18 +103,6 @@ public class JsonApiSerializerTest {
         assertEquals(11, dataNode.get("attributes").get("doubleAttr").asInt());
     }
 
-    @JsonApiResource(type = "linkObject", location = "linkLocation")
-    private static class LinkObject {
-        @JsonApiId
-        private String id = "42";
-
-        @JsonApiLink(name = "other", target = "otherLocation")
-        private LinkObject other;
-
-        @JsonApiLink(target = "unnamedLocation")
-        private LinkObject unnamed;
-    }
-
     @Test
     public void testLinkSerialization() {
         LinkObject linkObject = new LinkObject();
@@ -181,6 +117,4 @@ public class JsonApiSerializerTest {
         assertEquals("otherLocation", result.get("links").get("other").textValue());
         assertEquals("unnamedLocation", result.get("links").get("unnamed").textValue());
     }
-
-
 }
