@@ -151,4 +151,15 @@ public class JsonApiSerializerTest {
                 IllegalArgumentException.class,
                 () -> mapper.valueToTree(forbidden));
     }
+
+    @Test
+    public void testAddCollectionWithRelationships() {
+        List<RelationshipObject> list = Arrays.asList(new RelationshipObject(), new RelationshipObject());
+        JsonNode result = mapper.valueToTree(list);
+
+        System.out.println(result);
+        assertEquals(2, result.get("data").size());
+        assertEquals(3, result.get("data").get(0).get("relationships").size());
+        assertEquals(3, result.get("data").get(1).get("relationships").size());
+    }
 }
