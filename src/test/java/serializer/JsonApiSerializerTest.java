@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import models.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -140,5 +141,14 @@ public class JsonApiSerializerTest {
         assertEquals(
                 "42",
                 result.get("data").get("relationships").get("named").get("id").textValue());
+    }
+
+    @Test
+    public void testAddForbiddenRelationship() {
+        RelationshipObject forbidden = new RelationshipObject(new Object());
+
+        Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> mapper.valueToTree(forbidden));
     }
 }

@@ -120,7 +120,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
     private void serializeRelationships(Object obj, ObjectNode node) throws IllegalAccessException, InvocationTargetException {
         Class clazz = obj.getClass();
         ObjectNode relationshipsNode = mapper.createObjectNode();
-        //fill relationshipsNode
+
         for(Field field: clazz.getDeclaredFields()) {
             field.setAccessible(true);
             if(field.isAnnotationPresent(JsonApiRelationship.class)) {
@@ -130,6 +130,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
                 }
                 ObjectNode otherNode = mapper.createObjectNode();
                 Object other = field.get(obj);
+                assertHasValidJsonApiAnnotations(other);
                 String otherId = getJsonApiId(other);
                 String otherType = getJsonApiType(other);
                 otherNode.set("id", mapper.valueToTree(otherId));
