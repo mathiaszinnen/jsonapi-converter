@@ -104,7 +104,7 @@ public class JsonApiResponseTest {
                 "http://BASEPATH/unnamedLocation",
                 resultNode.get("data").get(1).get("links").get("unnamed").textValue());
         assertEquals(
-                "http://BASEPATH/linkLocation/0",
+                "http://BASEPATH/0",
                 resultNode.get("data").get(0).get("links").get("self").textValue());
     }
 
