@@ -19,7 +19,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.Collection;
 
 import static util.Assert.assertHasValidJsonApiAnnotations;
@@ -61,12 +60,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         return (annotation != null)? annotation.location() : "";
     }
 
-    private boolean containsLinks(Class clazz) {
-        return Arrays.stream(clazz
-                        .getDeclaredFields())
-                        .anyMatch(field -> field.isAnnotationPresent(JsonApiLink.class));
-    }
-
     private void serializeData(Object obj, JsonGenerator gen) throws IOException, InvocationTargetException, IllegalAccessException {
         assertHasValidData(obj);
 
@@ -102,20 +95,19 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         Class clazz = obj.getClass();
         ObjectNode linkNode = mapper.createObjectNode();
         //process JsonApiLink annotations
-        if(containsLinks(clazz)) {
-            for(Field field: clazz.getDeclaredFields()) {
-                field.setAccessible(true);
-                if(field.isAnnotationPresent(JsonApiLink.class)) {
-                    String linkName = field.getDeclaredAnnotation(JsonApiLink.class).name();
-                    String linkTarget = field.getDeclaredAnnotation(JsonApiLink.class).target();
-                    if(linkName.equals("")) { //default value. no name specified
-                        field.setAccessible(true);
-                        linkName = field.getName();
-                    }
-                    linkNode.set(linkName, mapper.valueToTree(linkTarget));
+        for(Field field: clazz.getDeclaredFields()) {
+            field.setAccessible(true);
+            if(field.isAnnotationPresent(JsonApiLink.class)) {
+                String linkName = field.getDeclaredAnnotation(JsonApiLink.class).name();
+                String linkTarget = field.getDeclaredAnnotation(JsonApiLink.class).target();
+                if(linkName.equals("")) { //default value. no name specified
+                    field.setAccessible(true);
+                    linkName = field.getName();
                 }
+                linkNode.set(linkName, mapper.valueToTree(linkTarget));
             }
         }
+
         //create selflink
         if(!getLocation(clazz).equals("")) {
                 linkNode.put("self", getLocation(clazz) + "/" + getJsonApiId(obj));
@@ -149,12 +141,6 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         if(relationshipsNode.size() > 0) {
             node.set("relationships", relationshipsNode);
         }
-    }
-
-    private boolean containsRelationships(Class clazz) {
-        return Arrays.stream(clazz
-                .getDeclaredFields())
-                .anyMatch(field -> field.isAnnotationPresent(JsonApiRelationship.class));
     }
 
     /**
