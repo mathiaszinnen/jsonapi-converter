@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import models.GetterObject;
-import models.LinkObject;
-import models.SelfLinkPojo;
-import models.SimplePojo;
+import models.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +27,7 @@ public class JsonApiSerializerTest {
         module.addSerializer(new JsonApiSerializer(SimplePojo.class));
         module.addSerializer(new JsonApiSerializer(Collection.class));
         module.addSerializer(new JsonApiSerializer(SelfLinkPojo.class));
+        module.addSerializer(new JsonApiSerializer(RelationshipObject.class));
         mapper.registerModule(module);
     }
 
@@ -116,5 +114,25 @@ public class JsonApiSerializerTest {
         assertEquals("linkLocation/42", result.get("data").get("links").get("self").textValue());
         assertEquals("otherLocation", result.get("data").get("links").get("other").textValue());
         assertEquals("unnamedLocation", result.get("data").get("links").get("unnamed").textValue());
+    }
+
+    @Test
+    public void testRelationshipSerialization() {
+        RelationshipObject relObject = new RelationshipObject();
+        JsonNode result = mapper.valueToTree(relObject);
+
+        System.out.println(result);
+        assertTrue(result.get("data").has("relationships"));
+        assertEquals(JsonNodeType.OBJECT, result.get("data").getNodeType());
+        assertTrue(result.get("data").get("relationships").has("SimplePojo"));
+        assertEquals(
+                "relatedObject",
+                result.get("data").get("relationships").get("SimplePojo").get("id").textValue());
+        assertEquals(
+                "simple",
+                result.get("data").get("relationships").get("SimplePojo").get("type").textValue());
+        assertEquals(
+                2,
+                result.get("data").get("relationships").get("SimplePojo").get("attributes").size());
     }
 }
