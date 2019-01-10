@@ -14,7 +14,7 @@ import java.util.Objects;
 
 public class JsonApiResponse {
 
-    private JsonNode document;
+    private ObjectNode document;
     private final UriInfo uriInfo;
     private final Response.StatusType statusCode;
 
@@ -142,7 +142,7 @@ public class JsonApiResponse {
         public JsonApiResponse.Buildable addLink(String name, URI ref) {
 
             if(!instance.document.has("links")) {
-                ((ObjectNode) instance.document).set("links", mapper.createObjectNode());
+                instance.document.set("links", mapper.createObjectNode());
             }
 
             URI absRef = instance.uriInfo.getAbsolutePath().resolve("/").resolve(ref);
