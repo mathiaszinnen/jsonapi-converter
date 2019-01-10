@@ -60,6 +60,34 @@ public class JsonApiResponseTest {
         assertEquals("http://BASEPATH/otherLocation", resultNode.get("links").get("other").textValue());
     }
 
+    @Test
+    public void testAddRelativeLink() {
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(simplePojo)
+                .addLink("name", URI.create("location"))
+                .build();
+
+        JsonNode resultNode = getEntityNode(result);
+        System.out.println(resultNode);
+        assertEquals(1, resultNode.get("links").size());
+        assertEquals("http://BASEPATH/location", resultNode.get("links").get("name").textValue());
+    }
+
+    @Test
+    public void testAddAbsoluteLink() {
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(simplePojo)
+                .addLink("google", URI.create("http://www.google.com"))
+                .build();
+
+        JsonNode resultNode = getEntityNode(result);
+        System.out.println(resultNode);
+        assertEquals(1, resultNode.get("links").size());
+        assertEquals("http://www.google.com", resultNode.get("links").get("google").textValue());
+    }
+
     private JsonNode getEntityNode(Response response) {
         return (JsonNode) response.getEntity();
     }

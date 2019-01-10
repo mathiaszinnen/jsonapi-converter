@@ -94,14 +94,31 @@ public class JsonApiResponse {
         }
 
         private JsonNode updateSingleLinkNode(URI baseUri, ObjectNode linkNode, String nodeName) {
-            String relativeLink = linkNode.get(nodeName).textValue();
-            URI absUri = baseUri.resolve(relativeLink);
-            return mapper.valueToTree(absUri);
+            JsonNode refNode = linkNode.get(nodeName);
+            if(isAbsolute(refNode.textValue())) {
+                return refNode;
+            } else {
+                URI absUri = baseUri.resolve(refNode.textValue());
+                return mapper.valueToTree(absUri);
+            }
+        }
+
+        private boolean isAbsolute(String linkNode) {
+            return URI.create(linkNode).isAbsolute();
         }
 
         @Override
         public JsonApiResponse.Buildable addLink(String name, URI ref) {
-            //todo
+
+            if(!instance.document.has("links")) {
+                ((ObjectNode) instance.document).set("links", mapper.createObjectNode());
+            }
+
+            URI absRef = instance.uriInfo.getAbsolutePath().resolve(ref);
+
+            ((ObjectNode) instance.document.get("links"))
+                    .set(name, mapper.valueToTree(absRef.toString()));
+
             return this;
         }
 
