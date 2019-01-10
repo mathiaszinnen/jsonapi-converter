@@ -104,6 +104,11 @@ public class JsonApiResponse {
          */
         JsonApiResponse.Buildable data(Object entity);
 
+        /**
+         * Add a collection of entities to a response.
+         * @param entityCollection
+         * @return
+         */
         JsonApiResponse.Buildable data(Collection<?> entityCollection);
     }
 
