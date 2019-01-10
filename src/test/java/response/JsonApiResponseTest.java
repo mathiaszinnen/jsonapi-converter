@@ -2,8 +2,10 @@ package response;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import exceptions.JsonApiSerializationException;
 import models.LinkObject;
 import models.SimplePojo;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -43,12 +45,13 @@ public class JsonApiResponseTest {
 
     @Test
     public void testAddWrongEntity() {
-        Response result = JsonApiResponse
-                .getResponse(uriInfo)
-                .data(new Object())
-                .build();
-
-
+        Assertions.assertThrows(
+                JsonApiSerializationException.class,
+                () -> JsonApiResponse
+                        .getResponse(uriInfo)
+                        .data(new Object())
+                        .build()
+        );
     }
 
     @Test
