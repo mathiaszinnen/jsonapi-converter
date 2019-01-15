@@ -24,4 +24,7 @@ public class RelationshipObject {
 
     @JsonApiRelationship(name = "named")
     LinkObject namedRelated = new LinkObject();
+
+    @JsonApiRelationship(location = "ftp://download.me/")
+    SimplePojo located = new SimplePojo("located");
 }

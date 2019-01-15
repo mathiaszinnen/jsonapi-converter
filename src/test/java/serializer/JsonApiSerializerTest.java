@@ -142,6 +142,9 @@ public class JsonApiSerializerTest {
         assertEquals(
                 "42",
                 result.get("data").get("relationships").get("named").get("data").get("id").textValue());
+        assertEquals(
+                "ftp://download.me/",
+                result.get("data").get("relationships").get("located").get("links").get("self").textValue());
     }
 
     @Test
@@ -152,7 +155,7 @@ public class JsonApiSerializerTest {
         JsonNode result = mapper.valueToTree(relationshipObject);
 
         System.out.println(result);
-        assertEquals(3,
+        assertEquals(4,
                 result.get("data").get("relationships").size());
         assertTrue(result.get("data").get("relationships").get("dangerous").get("data").isArray());
         assertEquals("1",
@@ -179,7 +182,7 @@ public class JsonApiSerializerTest {
 
         System.out.println(result);
         assertEquals(2, result.get("data").size());
-        assertEquals(3, result.get("data").get(0).get("relationships").size());
-        assertEquals(3, result.get("data").get(1).get("relationships").size());
+        assertEquals(4, result.get("data").get(0).get("relationships").size());
+        assertEquals(4, result.get("data").get(1).get("relationships").size());
     }
 }

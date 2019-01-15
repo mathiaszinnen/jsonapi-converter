@@ -140,6 +140,12 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
                 }
                 ObjectNode otherNode = mapper.createObjectNode();
                 Object other = field.get(obj);
+                String location = field.getDeclaredAnnotation(JsonApiRelationship.class).location();
+                if(!location.equals("")) {
+                    ObjectNode linkNode = mapper.createObjectNode();
+                    linkNode.set("self", mapper.valueToTree(location));
+                    otherNode.set("links", linkNode);
+                }
                 JsonNode otherDataNode = createRelationshipDataNode(other);
                 otherNode.set("data", otherDataNode);
                 relationshipsNode.set(name, otherNode);
