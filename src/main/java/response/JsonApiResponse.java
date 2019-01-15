@@ -13,6 +13,7 @@ import java.util.Collection;
 
 import static util.Assert.assertHasValidJsonApiAnnotations;
 import static util.JsonUtils.createNodeIfNotExisting;
+import static util.JsonUtils.createRelationshipDataNode;
 
 public class JsonApiResponse {
 
@@ -152,13 +153,25 @@ public class JsonApiResponse {
         }
 
         @Override
-        public JsonApiResponse.WithRelationship addRelationship(String name, Object entity, URI location) {
-            return null;
-        }
+        public JsonApiResponse.WithRelationship addRelationship(String name, Object entity) {
+            assertHasValidJsonApiAnnotations(entity);
 
-        @Override
-        public JsonApiResponse.WithRelationship addRelationship(String name, Collection<?> entityCollection, URI location) {
-            return null;
+            if(dataNode().isArray()) {
+                //exception?
+                //do it for each datanode element?
+            } else {
+                ObjectNode relationshipsNode = createNodeIfNotExisting(dataNode(), "relationships");
+                ObjectNode currentRelationship = createNodeIfNotExisting(relationshipsNode, name);
+                try {
+                    JsonNode relationshipDataNode = createRelationshipDataNode(entity);
+                    currentRelationship.set("data", relationshipDataNode);
+
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalArgumentException("Only correctly annotated classes can be added as relationships. Please add JsonApiResource and JsonApiId annotations to " + entity.getClass(), e);
+                }
+            }
+
+            return this;
         }
 
         @Override
@@ -169,6 +182,10 @@ public class JsonApiResponse {
         @Override
         public WithRelationship include(String includedName) {
             return null;
+        }
+
+        private JsonNode dataNode() {
+            return instance.document.get("data");
         }
     }
 
@@ -211,23 +228,11 @@ public class JsonApiResponse {
          * Adds a relationship to the generated response body. The corresponding entity is represented as
          * a ResourceIdentifier with a selflink on resource level.
          *
-         * @param name     the name of the relationship in the generated response body.
-         * @param entity   the corresponding entity to which the relationship should be added.
-         * @param location the endpoint where the entity is located.
+         * @param name   the name of the relationship in the generated response body.
+         * @param entity the corresponding entity to which the relationship should be added.
          * @return a buildable Responsebuilder on which addIncluded() can be called.
          */
-        JsonApiResponse.WithRelationship addRelationship(String name, Object entity, URI location);
-
-        /**
-         * Adds a relationship to the generated response body. The corresponding collection of entities is represented as
-         * a collection of ResourceIdentifiers with selflinks on resource level.
-         *
-         * @param name             the name of the relationship in the generated response body.
-         * @param entityCollection the collection of entities to which the relationship should be added
-         * @param location         the endpoint where the entity is located.
-         * @return a buildable Responsebuilder on which addIncluded() can be called.
-         */
-        JsonApiResponse.WithRelationship addRelationship(String name, Collection<?> entityCollection, URI location);
+        JsonApiResponse.WithRelationship addRelationship(String name, Object entity);
     }
 
     /**

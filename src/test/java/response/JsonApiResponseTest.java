@@ -181,7 +181,48 @@ public class JsonApiResponseTest {
         assertEquals("http://www.google.com", resultNode.get("links").get("google").textValue());
     }
 
+    @Test
+    public void testAddRelationship() {
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(new SimplePojo("relatee"))
+                .addRelationship("rel", new SimplePojo("related"))
+                .addRelationship("another", new LinkObject("anotherRelated"))
+                .addRelationship("another", new LinkObject("anotherRelated"))
+                .build();
+
+        JsonNode resultNode = getEntityNode(result);
+        System.out.println(resultNode.toString());
+        assertEquals("relatee",
+                resultNode.get("data").get("id").textValue());
+        assertEquals(2, resultNode.get("data").get("relationships").size());
+        assertEquals(1, resultNode.get("data").get("relationships").get("rel").size());
+        assertEquals("related",
+                resultNode.get("data").get("relationships").get("rel").get("data").get("id").textValue());
+    }
+
+    @Test
+    public void testAddRelatedCollection() {
+        List<SimplePojo> relatedList = Arrays.asList(new SimplePojo("1"), new SimplePojo("2"));
+
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(new SimplePojo("relatee"))
+                .addRelationship("list", relatedList)
+                .build();
+
+        JsonNode resultNode = getEntityNode(result);
+        System.out.println(resultNode.toString());
+        assertEquals(1, resultNode.get("data").get("relationships").size());
+        assertTrue(resultNode.get("data").get("relationships").get("list").get("data").isArray());
+        assertEquals("1",
+                resultNode.get("data").get("relationships").get("list").get("data").get(0).get("id").textValue());
+        assertEquals("2",
+                resultNode.get("data").get("relationships").get("list").get("data").get(1).get("id").textValue());
+    }
+
     private JsonNode getEntityNode(Response response) {
         return (JsonNode) response.getEntity();
+
     }
 }
