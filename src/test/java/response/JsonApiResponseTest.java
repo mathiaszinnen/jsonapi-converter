@@ -221,6 +221,21 @@ public class JsonApiResponseTest {
                 resultNode.get("data").get("relationships").get("list").get("data").get(1).get("id").textValue());
     }
 
+    @Test
+    public void testAddRelationLocation() {
+        Response result = JsonApiResponse
+                .getResponse(uriInfo)
+                .data(new SimplePojo("relatee"))
+                .addRelationship(new SimplePojo("related"), URI.create("http://www.location.com"))
+                .build();
+
+        JsonNode resultNode = getEntityNode(result);
+        System.out.println(resultNode.toString());
+        assertEquals(1, resultNode.get("data").get("relationships").size());
+        assertEquals("http://www.location.com/related",
+                resultNode.get("data").get("relationships").get("SimplePojo").get("links").get("self").textValue());
+    }
+
     private JsonNode getEntityNode(Response response) {
         return (JsonNode) response.getEntity();
 

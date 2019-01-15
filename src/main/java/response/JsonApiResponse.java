@@ -12,8 +12,7 @@ import java.net.URI;
 import java.util.Collection;
 
 import static util.Assert.assertHasValidJsonApiAnnotations;
-import static util.JsonUtils.createNodeIfNotExisting;
-import static util.JsonUtils.createRelationshipDataNode;
+import static util.JsonUtils.*;
 
 public class JsonApiResponse {
 
@@ -160,7 +159,14 @@ public class JsonApiResponse {
         }
 
         @Override
-        public JsonApiResponse.WithRelationship addRelationship(String name, Object entity) {
+        public WithRelationship addRelationship(Object entity, URI location) {
+            String name = entity.getClass().getSimpleName();
+            addRelationship(name, entity, location);
+            return this;
+        }
+
+        @Override
+        public WithRelationship addRelationship(String name, Object entity, URI location) {
             assertHasValidJsonApiAnnotations(entity);
 
             if(dataNode().isArray()) {
@@ -172,11 +178,30 @@ public class JsonApiResponse {
                 try {
                     JsonNode relationshipDataNode = createRelationshipDataNode(entity);
                     currentRelationship.set("data", relationshipDataNode);
+                    if(location != null) {
+                        ObjectNode linkNode = mapper.createObjectNode();
+                        String ref;
+                        if(entity instanceof Collection) {
+                            ref = location.toString();
+                        } else {
+                            ref = location.resolve("/").resolve(getJsonApiId(entity)).toString();
+                        }
+                        linkNode.set("self", mapper.valueToTree(ref));
+                        currentRelationship.set("links", linkNode);
+                    }
 
                 } catch (ReflectiveOperationException e) {
                     throw new IllegalArgumentException("Only correctly annotated classes can be added as relationships. Please add JsonApiResource and JsonApiId annotations to " + entity.getClass(), e);
                 }
             }
+
+            return this;
+        }
+
+        @Override
+        public JsonApiResponse.WithRelationship addRelationship(String name, Object entity) {
+            addRelationship(name, entity, null);
+            assertHasValidJsonApiAnnotations(entity);
 
             return this;
         }
@@ -247,7 +272,22 @@ public class JsonApiResponse {
          */
         WithRelationship addRelationship(Object entity);
 
+        /**
+         * Adds a relationship using the runtime class of the related entity as relationship name and generate a selflink at {@param location}.
+         * @param entity the correspending entity of the relationship
+         * @param location the location for the selflink
+         * @return a buildable Responsebuilder on which addIncluded() can be called.
+         */
+        WithRelationship addRelationship(Object entity, URI location);
 
+        /**
+         * Adds a relationship and generate a selflink at {@param location}.
+         * @param name the name of the relationship
+         * @param entity the correspending entity of the relationship
+         * @param location the location for the selflink
+         * @return a buildable Responsebuilder on which addIncluded() can be called.
+         */
+        WithRelationship addRelationship(String name, Object entity, URI location);
     }
 
     /**
