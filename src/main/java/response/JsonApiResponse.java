@@ -229,24 +229,25 @@ public class JsonApiResponse {
          * @param ref  the reference of the link.
          * @return a buildable Responsebuilder.
          */
-        JsonApiResponse.Buildable addLink(String name, URI ref);
+        Buildable addLink(String name, URI ref);
 
         /**
-         * Adds a relationship to the generated response body. The corresponding entity is represented as
-         * a ResourceIdentifier with a selflink on resource level.
+         * Adds a relationship to the generated response body.
          *
          * @param name   the name of the relationship in the generated response body.
          * @param entity the corresponding entity to which the relationship should be added.
          * @return a buildable Responsebuilder on which addIncluded() can be called.
          */
-        JsonApiResponse.WithRelationship addRelationship(String name, Object entity);
+        WithRelationship addRelationship(String name, Object entity);
 
         /**
          * Adds a relationship without specifying its name. The runtime class of the related entity is being used as relationship name.
          * @param entity the corresponding entity to which the relationship should be added.
          * @return a buildable Responsebuilder on which addIncluded() can be called.
          */
-        JsonApiResponse.WithRelationship addRelationship(Object entity);
+        WithRelationship addRelationship(Object entity);
+
+
     }
 
     /**
