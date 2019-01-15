@@ -153,6 +153,13 @@ public class JsonApiResponse {
         }
 
         @Override
+        public JsonApiResponse.WithRelationship addRelationship(Object entity) {
+            String name = entity.getClass().getSimpleName();
+            addRelationship(name, entity);
+            return this;
+        }
+
+        @Override
         public JsonApiResponse.WithRelationship addRelationship(String name, Object entity) {
             assertHasValidJsonApiAnnotations(entity);
 
@@ -233,6 +240,13 @@ public class JsonApiResponse {
          * @return a buildable Responsebuilder on which addIncluded() can be called.
          */
         JsonApiResponse.WithRelationship addRelationship(String name, Object entity);
+
+        /**
+         * Adds a relationship without specifying its name. The runtime class of the related entity is being used as relationship name.
+         * @param entity the corresponding entity to which the relationship should be added.
+         * @return a buildable Responsebuilder on which addIncluded() can be called.
+         */
+        JsonApiResponse.WithRelationship addRelationship(Object entity);
     }
 
     /**
