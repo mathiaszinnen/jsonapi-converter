@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import static util.Assert.assertHasValidJsonApiAnnotations;
 import static util.Assert.isGettable;
+import static util.JsonUtils.*;
 
 public class JsonApiSerializer<T> extends StdSerializer<Object> {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -117,7 +118,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         }
     }
 
-    private void serializeRelationships(Object obj, ObjectNode node) throws IllegalAccessException, InvocationTargetException {
+    private static void serializeRelationships(Object obj, ObjectNode node) throws IllegalAccessException, InvocationTargetException {
 
         ObjectNode relationshipsNode = createRelationshipsNode(obj);
 
@@ -126,7 +127,7 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
         }
     }
 
-    private ObjectNode createRelationshipsNode(Object obj) throws IllegalAccessException, InvocationTargetException {
+    private static ObjectNode createRelationshipsNode(Object obj) throws IllegalAccessException, InvocationTargetException {
         ObjectNode relationshipsNode = mapper.createObjectNode();
         Class clazz = obj.getClass();
 
@@ -139,30 +140,12 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
                 }
                 ObjectNode otherNode = mapper.createObjectNode();
                 Object other = field.get(obj);
-                JsonNode otherDataNode =createRelationshipDataNode(other);
+                JsonNode otherDataNode = createRelationshipDataNode(other);
                 otherNode.set("data", otherDataNode);
                 relationshipsNode.set(name, otherNode);
             }
         }
         return relationshipsNode;
-    }
-
-    private JsonNode createRelationshipDataNode(Object obj) throws InvocationTargetException, IllegalAccessException {
-        JsonNode relatedDataNode;
-        if(obj instanceof Collection) {
-            relatedDataNode = mapper.createArrayNode();
-            for(Object element: (Collection) obj) {
-                ((ArrayNode) relatedDataNode).add(createRelationshipDataNode(element));
-            }
-
-        } else {
-            assertHasValidJsonApiAnnotations(obj);
-            relatedDataNode = mapper.createObjectNode();
-            ((ObjectNode) relatedDataNode).set("id", mapper.valueToTree(getJsonApiId(obj)));
-            ((ObjectNode) relatedDataNode).set("type", mapper.valueToTree(getJsonApiType(obj)));
-        }
-        return relatedDataNode;
-
     }
 
     /**
@@ -225,51 +208,9 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
                 && isGettable(method);
     }
 
-    /**
-     * Get the jsonAPI id of a a jsonAPI resource object
-     * @param data the resource object
-     * @return the value of a @JsonApiId annotated field or method. If there are multiple @JsonApiId annotations present,
-     * annotated fields are considered first.
-     * @throws IllegalAccessException if the value of the id field cannot be determined
-     * @throws InvocationTargetException if the invocation of the id method fails
-     * @throws IllegalArgumentException if there is no JsonApiId annotated field or method
-     */
-    private String getJsonApiId(Object data) throws IllegalAccessException, InvocationTargetException, IllegalArgumentException {
-        for(Field field: data.getClass().getDeclaredFields()) {
-            field.setAccessible(true);
-            if(field.isAnnotationPresent(JsonApiId.class)
-                    && field.getType() == String.class) {
-                return (String) field.get(data);
-            }
-        }
-        for(Method method: data.getClass().getDeclaredMethods()) {
-            method.setAccessible(true);
-            if(method.isAnnotationPresent(JsonApiId.class)
-                    && method.getReturnType() == String.class
-                    && method.getParameterCount() == 0) {
-                return (String) method.invoke(data);
-            }
-        }
-        throw new IllegalArgumentException(data.getClass().getCanonicalName() + " contains no @JsonApiId annotation");
-    }
-
-    /**
-     * Get the jsonAPI type of a jsonAPI resource object
-     * @param data the resource object
-     * @return the type of the object, as specified in @JsonApiResource annotation
-     */
-    private String getJsonApiType(Object data) {
-        return data
-                .getClass()
-                .getDeclaredAnnotation(JsonApiResource.class)
-                .type();
-    }
-
     private void serializeErrors(Object doc, JsonGenerator gen) {
         //later
     }
-
-
 
     private void serializeIncluded(Object doc, JsonGenerator gen) {
         //later
