@@ -119,6 +119,7 @@ public class JsonApiSerializerTest {
 
     @Test
     public void testRelationshipSerialization() {
+
         RelationshipObject relObject = new RelationshipObject();
         JsonNode result = mapper.valueToTree(relObject);
 
@@ -128,20 +129,39 @@ public class JsonApiSerializerTest {
         assertTrue(result.get("data").get("relationships").has("related"));
         assertEquals(
                 "relatedObject",
-                result.get("data").get("relationships").get("related").get("id").textValue());
+                result.get("data").get("relationships").get("related").get("data").get("id").textValue());
         assertEquals(
                 "simple",
-                result.get("data").get("relationships").get("related").get("type").textValue());
+                result.get("data").get("relationships").get("related").get("data").get("type").textValue());
         assertEquals(
                 2,
-                result.get("data").get("relationships").get("related").size());
+                result.get("data").get("relationships").get("related").get("data").size());
         assertEquals(
                 "linkObject",
-                result.get("data").get("relationships").get("named").get("type").textValue());
+                result.get("data").get("relationships").get("named").get("data").get("type").textValue());
         assertEquals(
                 "42",
-                result.get("data").get("relationships").get("named").get("id").textValue());
+                result.get("data").get("relationships").get("named").get("data").get("id").textValue());
     }
+
+    @Test
+    public void testCollectionRelationships() {
+        List<SimplePojo> list = Arrays.asList(new SimplePojo("1"), new SimplePojo("2"));
+        RelationshipObject relationshipObject = new RelationshipObject(list);
+
+        JsonNode result = mapper.valueToTree(relationshipObject);
+
+        System.out.println(result);
+        assertEquals(3,
+                result.get("data").get("relationships").size());
+        assertTrue(result.get("data").get("relationships").get("dangerous").get("data").isArray());
+        assertEquals("1",
+                result.get("data").get("relationships").get("dangerous").get("data").get(0).get("id").textValue());
+        assertEquals("2",
+                result.get("data").get("relationships").get("dangerous").get("data").get(1).get("id").textValue());
+    }
+
+
 
     @Test
     public void testAddForbiddenRelationship() {

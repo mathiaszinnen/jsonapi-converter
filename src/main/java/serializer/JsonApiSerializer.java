@@ -118,8 +118,17 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
     }
 
     private void serializeRelationships(Object obj, ObjectNode node) throws IllegalAccessException, InvocationTargetException {
-        Class clazz = obj.getClass();
+
+        ObjectNode relationshipsNode = createRelationshipsNode(obj);
+
+        if(relationshipsNode.size() > 0) {
+            node.set("relationships", relationshipsNode);
+        }
+    }
+
+    private ObjectNode createRelationshipsNode(Object obj) throws IllegalAccessException, InvocationTargetException {
         ObjectNode relationshipsNode = mapper.createObjectNode();
+        Class clazz = obj.getClass();
 
         for(Field field: clazz.getDeclaredFields()) {
             field.setAccessible(true);
@@ -130,18 +139,30 @@ public class JsonApiSerializer<T> extends StdSerializer<Object> {
                 }
                 ObjectNode otherNode = mapper.createObjectNode();
                 Object other = field.get(obj);
-                assertHasValidJsonApiAnnotations(other);
-                String otherId = getJsonApiId(other);
-                String otherType = getJsonApiType(other);
-                otherNode.set("id", mapper.valueToTree(otherId));
-                otherNode.set("type", mapper.valueToTree(otherType));
+                JsonNode otherDataNode =createRelationshipDataNode(other);
+                otherNode.set("data", otherDataNode);
                 relationshipsNode.set(name, otherNode);
             }
         }
+        return relationshipsNode;
+    }
 
-        if(relationshipsNode.size() > 0) {
-            node.set("relationships", relationshipsNode);
+    private JsonNode createRelationshipDataNode(Object obj) throws InvocationTargetException, IllegalAccessException {
+        JsonNode relatedDataNode;
+        if(obj instanceof Collection) {
+            relatedDataNode = mapper.createArrayNode();
+            for(Object element: (Collection) obj) {
+                ((ArrayNode) relatedDataNode).add(createRelationshipDataNode(element));
+            }
+
+        } else {
+            assertHasValidJsonApiAnnotations(obj);
+            relatedDataNode = mapper.createObjectNode();
+            ((ObjectNode) relatedDataNode).set("id", mapper.valueToTree(getJsonApiId(obj)));
+            ((ObjectNode) relatedDataNode).set("type", mapper.valueToTree(getJsonApiType(obj)));
         }
+        return relatedDataNode;
+
     }
 
     /**
